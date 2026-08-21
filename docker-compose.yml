@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # Next.js Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradeguard-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - REGIME_SERVICE_URL=http://regime-service:8000
+    depends_on:
+      - regime-service
+
+  # Python Market Regime Detection Service
+  regime-service:
+    build:
+      context: ./regime-service
+      dockerfile: Dockerfile
+    container_name: tradeguard-regime
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
