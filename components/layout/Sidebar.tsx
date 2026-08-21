@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Search, BookOpen, Star, Settings,
   ShieldCheck, Radio, Brain, ClipboardList,
-  Building2, ChevronRight, Lock
+  Building2, ChevronRight, Lock, Shield
 } from 'lucide-react'
 
 // Enterprise Light Grouped Navigation List
@@ -27,6 +27,7 @@ const NAV_GROUPS = [
     title: 'COMPLIANCE & RISK',
     items: [
       { href: '/mind', label: 'Risk & Regime Engine', icon: ShieldCheck, badge: 'HMM' },
+      { href: '/compliance', label: 'Compliance', icon: Shield, badge: 'BEDROCK' },
     ],
   },
   {
