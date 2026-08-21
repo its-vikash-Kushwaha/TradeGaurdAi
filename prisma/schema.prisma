@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum TradeDirection {
+  LONG
+  SHORT
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum SessionStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum PerspectiveType {
+  TECHNICAL
+  INSTITUTIONAL
+  DARK_POOL
+  SOCIAL
+  FUNDAMENTAL
+  BEHAVIORAL
+}
+
+enum AssetClass {
+  STOCK
+  CRYPTO
+  FOREX
+  ETF
+}
+
+enum FeedEventType {
+  NEWS
+  HYPE_ALERT
+  ECONOMIC_EVENT
+  EARNINGS
+  MARKET_WIDE
+  PRICE_ACTION
+}
+
+enum ImpactLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum EmotionTag {
+  FOMO
+  REVENGE
+  DISCIPLINED
+  FEARFUL
+  OVERCONFIDENT
+  NEUTRAL
+  UNCLEAR
+  PANIC
+  GREED
+}
+
+model User {
+  id           String          @id @default(cuid())
+  clerkId      String          @unique
+  email        String          @unique
+  name         String?
+  timezone     String          @default("America/New_York")
+  currency     String          @default("USD")
+  plan              Plan            @default(FREE)
+  razorpayCustomerId String?
+  razorpaySubId      String?
+  planUpdatedAt      DateTime?
+  onboarded    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  watchlist    WatchlistItem[]
+  journals     JournalEntry[]
+  psychProfile PsychProfile?
+  trades       Trade[]
+  @@index([clerkId])
+}
+
+model WatchlistItem {
+  id         String     @id @default(cuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol     String
+  assetClass AssetClass @default(STOCK)
+  exchange   String?
+  addedAt    DateTime   @default(now())
+  @@unique([userId, symbol])
+  @@index([userId])
+}
+
+model FeedEvent {
+  id             String        @id @default(cuid())
+  symbol         String?
+  assetClass     AssetClass?
+  eventType      FeedEventType
+  headline       String
+  source         String?
+  sourceUrl      String?
+  rawSummary     String        @db.Text
+  aiAnalysis     Json
+  sentimentScore Int
+  sentimentLabel String
+  impactLevel    ImpactLevel
+  retailTrap     Boolean       @default(false)
+  retailTrapText String?
+  hypeRating     String?
+  grokWarning    String?
+  publishedAt    DateTime
+  processedAt    DateTime      @default(now())
+  expiresAt      DateTime
+  @@index([symbol, publishedAt])
+  @@index([eventType, publishedAt])
+  @@index([expiresAt])
+}
+
+model TickerAnalysis {
+  id                   String     @id @default(cuid())
+  symbol               String     @unique
+  assetClass           AssetClass
+  priceAtAnalysis      Float
+  priceChange24h       Float?
+  newsImpact           Json
+  technicalRead        Json
+  retailTrapAnalysis   Json
+  synthesis            Json
+  overallSentiment     Int
+  overallLabel         String
+  recommendation       String
+  recommendationReason String
+  support1             Float?
+  support2             Float?
+  resistance1          Float?
+  resistance2          Float?
+  vwap                 Float?
+  generatedAt          DateTime   @default(now())
+  validUntil           DateTime
+  @@index([symbol])
+}
+
+model JournalEntry {
+  id               String      @id @default(cuid())
+  userId           String
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date             DateTime    @default(now())
+  symbol           String?
+  assetClass       AssetClass?
+  priceMove        Float?
+  tradedToday      Boolean     @default(false)
+  rawText          String      @db.Text
+  aiResponse       Json?
+  emotionTag       EmotionTag  @default(NEUTRAL)
+  riskFlag         Boolean     @default(false)
+  processingStatus String      @default("complete")
+  createdAt        DateTime    @default(now())
+  @@index([userId, date])
+  @@index([userId, emotionTag])
+}
+
+model PsychProfile {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streakDays    Int         @default(0)
+  longestStreak Int         @default(0)
+  totalEntries  Int         @default(0)
+  dominantTag   EmotionTag?
+  tagFrequency  Json        @default("{}")
+  weeklyInsight String?     @db.Text
+  lastInsightAt DateTime?
+  updatedAt     DateTime    @updatedAt
+}
+
+model EconomicEvent {
+  id         String   @id @default(cuid())
+  externalId String   @unique
+  title      String
+  country    String
+  currency   String
+  eventDate  DateTime
+  actual     String?
+  forecast   String?
+  previous   String?
+  impact     String
+  aiPreview  String?  @db.Text
+  createdAt  DateTime @default(now())
+  @@index([eventDate])
+}
+
+model TrendingSnapshot {
+  id             String     @id @default(cuid())
+  symbol         String
+  assetClass     AssetClass @default(STOCK)
+  mentionCount   Int
+  sentimentScore Float
+  hypeRating     String
+  grokAnalysis   String?    @db.Text
+  priceAtCapture Float?
+  priceChange1h  Float?
+  capturedAt     DateTime   @default(now())
+  @@index([capturedAt])
+}
+
+model MarketBrief {
+  id          String   @id @default(cuid())
+  briefDate   String   @unique
+  aiSummary   Json
+  vixLevel    Float?
+  topEvents   Json     @default("[]")
+  sectors     Json     @default("{}")
+  generatedAt DateTime @default(now())
+}
+
+// =============================================================================
+// V5 — Live Trading Copilot
+// =============================================================================
+
+model Trade {
+  id                String         @id @default(cuid())
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol            String
+  assetClass        AssetClass     @default(STOCK)
+  direction         TradeDirection
+  entryPrice        Float
+  entryTime         DateTime       @default(now())
+  exitPrice         Float?
+  exitTime          DateTime?
+  quantity          Float
+  stopLoss          Float?
+  takeProfit        Float?
+  status            TradeStatus    @default(OPEN)
+  pnl               Float?
+  pnlPct            Float?
+  rMultiple         Float?
+  setupTag          String?
+  regimeAtEntry     String?
+  statedConviction  Int?
+  notes             String?        @db.Text
+  session           CopilotSession?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+model CopilotSession {
+  id                String              @id @default(cuid())
+  tradeId           String              @unique
+  trade             Trade               @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  status            SessionStatus       @default(ACTIVE)
+  refreshCount      Int                 @default(0)
+  lastRefreshedAt   DateTime?
+  overallSignal     String?
+  consensusSummary  String?             @db.Text
+  stopLossNote      String?
+  nextDecisionLevel Float?
+  currentPrice      Float?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  perspectives      CopilotPerspective[]
+  @@index([status])
+}
+
+model CopilotPerspective {
+  id           String          @id @default(cuid())
+  sessionId    String
+  session      CopilotSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  type         PerspectiveType
+  refreshIndex Int
+  model        String
+  rawOutput    Json
+  summary      String          @db.Text
+  signal       String?
+  alertLevel   ImpactLevel     @default(LOW)
+  urgentAlert  String?
+  generatedAt  DateTime        @default(now())
+  @@index([sessionId, refreshIndex])
+  @@index([sessionId, type, refreshIndex])
+}
+
+// =============================================================================
+// V7 — Mind Engine
+// =============================================================================
+
+model RegimeSnapshot {
+  id          String   @id @default(cuid())
+  symbol      String
+  regime      String   // BULL_TREND | BEAR_TREND | CHOP | CRISIS
+  confidence  Float
+  posterior   Json     // { BULL_TREND, BEAR_TREND, CHOP, CRISIS }
+  transition  Json     // transition probabilities from current regime
+  source      String   @default("hmm")  // "hmm" | "heuristic"
+  capturedAt  DateTime @default(now())
+  @@index([symbol, capturedAt])
+}
+
+model TraderModel {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  totalClosedTrades Int      @default(0)
+  totalJournals     Int      @default(0)
+  calibrated        Boolean  @default(false)
+  winRate           Float?
+  avgWinR           Float?
+  avgLossR          Float?
+  expectancyR       Float?
+  profitFactor      Float?
+  statsBySetup      Json     @default("{}")
+  statsByRegime     Json     @default("{}")
+  statsByHour       Json     @default("{}")
+  statsAfterLoss    Json     @default("{}")
+  statsAfterWin     Json     @default("{}")
+  behavioralFlags   Json     @default("[]")
+  convictionCalib   Json     @default("{}")
+  computedAt        DateTime @updatedAt
+}
+
+model MindDirective {
+  id              String   @id @default(cuid())
+  userId          String
+  directiveDate   String   // "YYYY-MM-DD" in user's local timezone
+  marketState     Json
+  traderState     Json
+  directive       Json
+  acknowledged    Boolean  @default(false)
+  @@unique([userId, directiveDate])
+}
