@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Brain, ChevronDown, ChevronUp } from 'lucide-react'
+import { Brain, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, Activity, ShieldCheck, Info } from 'lucide-react'
 import DirectiveCard from '@/components/mind/DirectiveCard'
 import TraderModelCard from '@/components/mind/TraderModelCard'
 import RegimeBadge from '@/components/shared/RegimeBadge'
@@ -13,26 +13,19 @@ interface DirectiveHistory {
   directive: { headline: string; todayEV: string; sizeGuidance: string }
 }
 
-const EV_COLOR: Record<string, string> = {
-  POSITIVE: 'var(--bull)',
-  NEGATIVE: 'var(--bear)',
-  NEUTRAL:  'var(--text-secondary)',
-  UNKNOWN:  'var(--text-muted)',
-}
-
-const REGIME_STYLE: Record<string, { dot: string }> = {
-  BULL_TREND: { dot: '#22c55e' },
-  BEAR_TREND: { dot: '#ef4444' },
-  CHOP:       { dot: '#f59e0b' },
-  CRISIS:     { dot: '#f97316' },
+const REGIME_CONFIG: Record<string, { color: string; bg: string; label: string; description: string }> = {
+  BULL_TREND: { color: '#16A34A', bg: 'rgba(22,163,74,0.08)',  label: 'Bull Trend',  description: 'Strong upward market regime' },
+  BEAR_TREND: { color: '#DC2626', bg: 'rgba(220,38,38,0.08)', label: 'Bear Trend',  description: 'Negative market pressure'  },
+  CHOP:       { color: '#D97706', bg: 'rgba(217,119,6,0.08)',  label: 'Range-bound', description: 'High chop and sideways action' },
+  CRISIS:     { color: '#DC2626', bg: 'rgba(220,38,38,0.12)', label: 'High Volatility', description: 'Elevated systemic risk event' },
 }
 
 interface RegimeData {
   current_regime: string
-  confidence: number
-  posterior:  Record<string, number>
-  source:     string
-  resolvedIndex: string
+  confidence:     number
+  posterior:      Record<string, number>
+  source:         string
+  resolvedIndex:  string
 }
 
 function RegimePanel({ symbol }: { symbol: string }) {
@@ -49,52 +42,44 @@ function RegimePanel({ symbol }: { symbol: string }) {
 
   if (loading) {
     return (
-      <div className="glass-card" style={{ padding:'16px' }}>
-        <div style={{ height:'12px', width:'80px', background:'var(--bg-subtle)', borderRadius:'4px' }} />
+      <div className="card-enterprise" style={{ padding: '16px' }}>
+        <div className="skeleton" style={{ height: '14px', width: '60%', borderRadius: '4px', marginBottom: '10px' }} />
+        <div className="skeleton" style={{ height: '36px', width: '100%', borderRadius: '6px' }} />
       </div>
     )
   }
 
   if (!regime) return null
 
-  const dot   = (REGIME_STYLE[regime.current_regime] ?? { dot: '#6b7280' }).dot
-  const label = regime.current_regime.replace(/_/g, ' ')
+  const config  = REGIME_CONFIG[regime.current_regime] ?? { color: '#64748B', bg: 'var(--bg-subtle)', label: regime.current_regime, description: '' }
+  const confPct = (regime.confidence * 100).toFixed(0)
 
   return (
-    <div className="glass-card" style={{ padding:'16px' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'12px' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-          <span style={{ width:8, height:8, borderRadius:'50%', background:dot, display:'inline-block' }} />
-          <span style={{ fontSize:'13px', fontWeight:'700', color:'var(--text-primary)' }}>{regime.resolvedIndex}</span>
+    <div className="card-enterprise card-hover-lift" style={{ padding: '16px 18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: config.color }} />
+          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--navy-primary)' }}>{regime.resolvedIndex}</span>
         </div>
-        <span style={{ fontSize:'11px', fontWeight:'700', padding:'2px 8px', borderRadius:'4px', background:dot+'20', color:dot }}>
-          {label}
+        <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', background: config.bg, color: config.color, border: `1px solid ${config.color}30` }}>
+          {config.label}
         </span>
       </div>
 
-      <div style={{ marginBottom:'10px' }}>
-        <div style={{ fontSize:'11px', color:'var(--text-muted)', marginBottom:'6px' }}>
-          Confidence: {(regime.confidence * 100).toFixed(0)}%
-          {regime.source === 'heuristic' && <span style={{ marginLeft:'4px' }}>(approx)</span>}
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>{config.description}</p>
+
+      <div style={{ marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Classifier Confidence</span>
+          <span style={{ fontSize: '11px', fontWeight: '700', color: config.color, fontFamily: 'JetBrains Mono, monospace' }}>{confPct}%</span>
         </div>
-        {Object.entries(regime.posterior).sort((a, b) => b[1] - a[1]).map(([r, p]) => {
-          const rdot = (REGIME_STYLE[r] ?? { dot: '#6b7280' }).dot
-          const pct  = (p * 100).toFixed(0)
-          return (
-            <div key={r} style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
-              <span style={{ width:6, height:6, borderRadius:'50%', background:rdot, flexShrink:0 }} />
-              <span style={{ fontSize:'11px', color:'var(--text-secondary)', flex:1 }}>{r.replace(/_/g,' ')}</span>
-              <div style={{ width:80, height:4, borderRadius:2, background:'var(--bg-subtle)', overflow:'hidden' }}>
-                <div style={{ width:`${pct}%`, height:'100%', background:rdot, borderRadius:2 }} />
-              </div>
-              <span style={{ fontSize:'10px', color:'var(--text-muted)', width:32, textAlign:'right', fontFamily:'JetBrains Mono,monospace' }}>{pct}%</span>
-            </div>
-          )
-        })}
+        <div style={{ height: '4px', borderRadius: '2px', background: 'var(--bg-subtle)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${confPct}%`, background: config.color, borderRadius: '2px' }} />
+        </div>
       </div>
 
-      <div style={{ fontSize:'10px', color:'var(--text-muted)', borderTop:'1px solid var(--border-muted)', paddingTop:'8px' }}>
-        Source: {regime.source} · 6h cache
+      <div style={{ fontSize: '10px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-default)', paddingTop: '8px' }}>
+        Source: {regime.source === 'heuristic' ? 'Estimated Statistical Model' : 'Regime Classifier'}
       </div>
     </div>
   )
@@ -118,51 +103,47 @@ export default function MindPage() {
   }, [])
 
   return (
-    <div>
-      <div style={{ marginBottom:'24px' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'4px' }}>
-          <Brain size={18} color="var(--accent-blue)" />
-          <h1 style={{ fontSize:'20px', fontWeight:'700', color:'var(--text-primary)' }}>Mind Engine</h1>
-          <div style={{ display:'flex', gap:'6px', marginLeft:'auto' }}>
+    <div className="slide-in">
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--navy-primary)', letterSpacing: '-0.01em' }}>
+            Risk & Regime Engine
+          </h1>
+          <span className="badge badge-info">REGULATORY ENGINE</span>
+          <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
             <RegimeBadge symbol="^NSEI" />
             <RegimeBadge symbol="^GSPC" />
           </div>
         </div>
-        <p style={{ fontSize:'13px', color:'var(--text-muted)' }}>
-          Daily directive · TraderModel · Market regime — all in one place
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          Daily compliance directive, risk parameter model, and statistical regime classification
         </p>
       </div>
 
-      {/* Three-column layout */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 280px', gap:'20px', alignItems:'start' }} className="mind-grid">
-
-        {/* Column 1: Directive + history */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 300px', gap: '20px', alignItems: 'start' }} className="mind-grid">
+        {/* Col 1 */}
         <div>
           <DirectiveCard isPro={isPro} />
 
-          {/* Directive history */}
           {history.length > 1 && (
-            <div className="glass-card" style={{ padding:'16px', marginTop:'16px' }}>
+            <div className="card-enterprise" style={{ padding: '16px', marginTop: '16px' }}>
               <button
                 onClick={() => setShowHist(h => !h)}
-                style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', background:'none', border:'none', cursor:'pointer', padding:0 }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                <span style={{ fontSize:'12px', fontWeight:'700', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>
-                  Past Directives ({history.length - 1})
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--navy-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Directive History ({history.length - 1})
                 </span>
                 {showHist ? <ChevronUp size={14} color="var(--text-muted)" /> : <ChevronDown size={14} color="var(--text-muted)" />}
               </button>
 
               {showHist && (
-                <div style={{ marginTop:'10px', display:'flex', flexDirection:'column', gap:'8px' }}>
+                <div className="slide-down" style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {history.slice(1).map(d => (
-                    <div key={d.id} style={{ padding:'10px 12px', borderRadius:'8px', background:'var(--bg-subtle)', display:'flex', alignItems:'center', gap:'10px' }}>
-                      <span style={{ fontSize:'11px', fontFamily:'JetBrains Mono,monospace', color:'var(--text-muted)', flexShrink:0 }}>{d.directiveDate}</span>
-                      <span style={{ fontSize:'12px', color:'var(--text-secondary)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    <div key={d.id} style={{ padding: '10px 12px', borderRadius: '6px', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-muted)' }}>{d.directiveDate}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {d.directive.headline}
-                      </span>
-                      <span style={{ fontSize:'10px', fontWeight:'700', color: EV_COLOR[d.directive.todayEV] ?? 'var(--text-muted)', flexShrink:0 }}>
-                        {d.directive.todayEV}
                       </span>
                     </div>
                   ))}
@@ -172,23 +153,22 @@ export default function MindPage() {
           )}
         </div>
 
-        {/* Column 2: Full TraderModelCard */}
+        {/* Col 2 */}
         <div>
           <TraderModelCard />
         </div>
 
-        {/* Column 3: Regime panels */}
-        <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
-          <div style={{ fontSize:'11px', fontWeight:'700', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>
+        {/* Col 3 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--navy-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Market Regimes
           </div>
           <RegimePanel symbol="^NSEI" />
           <RegimePanel symbol="^GSPC" />
-          <p style={{ fontSize:'10px', color:'var(--text-muted)', lineHeight:'1.5' }}>
-            Regime is computed by a Gaussian HMM classifier on 5 years of daily returns.
-            Heuristic fallback when the Python service is unavailable.
-            6-hour Redis cache. Not investment advice.
-          </p>
+          <div style={{ padding: '10px 12px', borderRadius: '6px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+            <Info size={12} style={{ display: 'inline', marginRight: '4px' }} />
+            Regimes are computed via statistical classification models on 5-year price returns.
+          </div>
         </div>
       </div>
     </div>
