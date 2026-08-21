@@ -153,6 +153,7 @@ export default function JournalPage() {
   const [symbol,     setSymbol]     = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [degradedNotice, setDegradedNotice] = useState('')
 
   useEffect(() => {
     fetch('/api/journal')
@@ -166,6 +167,7 @@ export default function JournalPage() {
     if (!text.trim()) return
     setSubmitting(true)
     setSubmitError('')
+    setDegradedNotice('')
     try {
       const res  = await fetch('/api/journal', {
         method:  'POST',
@@ -177,6 +179,7 @@ export default function JournalPage() {
         setEntries(prev => [data.data, ...prev])
         setText('')
         setSymbol('')
+        if (data.degraded) setDegradedNotice(data.degradedReason || 'Reflection unavailable — entry saved successfully.')
       } else {
         setSubmitError(data.error || 'Failed to save entry.')
       }
@@ -246,6 +249,7 @@ export default function JournalPage() {
                 />
               </div>
               {submitError && <div style={{ color: 'var(--bear)', fontSize: '12px' }}>{submitError}</div>}
+              {degradedNotice && <div style={{ color: 'var(--warning)', fontSize: '12px' }}>{degradedNotice}</div>}
               <button type="submit" className="btn-primary" disabled={submitting || !text.trim()} style={{ width: '100%', justifyContent: 'center' }}>
                 {submitting ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : 'Log Entry & Audit'}
               </button>
