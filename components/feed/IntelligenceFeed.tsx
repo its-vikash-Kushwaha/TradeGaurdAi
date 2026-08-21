@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, AlertTriangle, Filter, RefreshCw } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, AlertTriangle, Filter, RefreshCw, Layers, ShieldCheck, FileText } from 'lucide-react'
 
 interface FeedEvent {
   id:             string
@@ -27,22 +27,19 @@ function getRelativeTime(iso: string) {
 
 function SentimentIndicator({ score }: { score: number }) {
   if (score >= 65) return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--bull)' }}>
-      <TrendingUp size={12} />
-      <span style={{ fontSize: '11px', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{score}/100</span>
-    </div>
+    <span className="badge badge-compliant">
+      <TrendingUp size={12} /> {score}/100 LOW RISK
+    </span>
   )
   if (score <= 40) return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--bear)' }}>
-      <TrendingDown size={12} />
-      <span style={{ fontSize: '11px', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{score}/100</span>
-    </div>
+    <span className="badge badge-flagged">
+      <TrendingDown size={12} /> {score}/100 HIGH RISK
+    </span>
   )
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)' }}>
-      <Minus size={12} />
-      <span style={{ fontSize: '11px', fontWeight: '700', fontFamily: 'JetBrains Mono, monospace' }}>{score}/100</span>
-    </div>
+    <span className="badge badge-review">
+      <Minus size={12} /> {score}/100 MEDIUM RISK
+    </span>
   )
 }
 
@@ -52,25 +49,37 @@ function FeedCard({ event }: { event: FeedEvent }) {
 
   return (
     <div
-      className="glass-card slide-in"
-      style={{ padding: '16px', marginBottom: '10px', cursor: 'pointer' }}
+      className="card-enterprise card-hover-lift slide-in"
+      style={{ padding: '18px 20px', marginBottom: '12px', cursor: 'pointer' }}
       onClick={() => setExpanded(!expanded)}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '10px', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-          {event.symbol && <span className="tag">{event.symbol}</span>}
-          <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px', background: 'var(--bg-subtle)', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {event.symbol && (
+            <span style={{
+              fontFamily: 'JetBrains Mono, monospace', fontWeight: '800', fontSize: '12px',
+              padding: '2px 8px', borderRadius: '4px', background: 'var(--bg-subtle)',
+              border: '1px solid var(--border-default)', color: 'var(--navy-primary)',
+            }}>
+              {event.symbol}
+            </span>
+          )}
+          <span style={{
+            fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '4px',
+            background: 'var(--bg-subtle)', color: 'var(--text-secondary)',
+            fontFamily: 'JetBrains Mono, monospace',
+          }}>
             {event.eventType}
           </span>
-          {event.impactLevel === 'HIGH' || event.impactLevel === 'CRITICAL' ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 7px', background: 'var(--bear-dim)', color: 'var(--bear)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '5px', fontSize: '10px', fontWeight: '700' }}>
-              <AlertTriangle size={9} /> {event.impactLevel}
+          {(event.impactLevel === 'HIGH' || event.impactLevel === 'CRITICAL') && (
+            <span className="badge badge-flagged">
+              <AlertTriangle size={10} /> {event.impactLevel} EXCEPTION
             </span>
-          ) : null}
+          )}
           {event.retailTrap && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 7px', background: 'rgba(245,158,11,0.1)', color: 'var(--warning)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '5px', fontSize: '10px', fontWeight: '700' }}>
-              ⚠ RETAIL TRAP
+            <span className="badge badge-review">
+              <AlertTriangle size={10} /> DISCREPANCY DETECTED
             </span>
           )}
         </div>
@@ -79,36 +88,42 @@ function FeedCard({ event }: { event: FeedEvent }) {
             {getRelativeTime(event.publishedAt)}
           </span>
           <SentimentIndicator score={event.sentimentScore} />
-          {expanded ? <ChevronUp size={14} color="var(--text-muted)" /> : <ChevronDown size={14} color="var(--text-muted)" />}
+          <div style={{
+            width: '24px', height: '24px', borderRadius: '6px',
+            background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--text-secondary)',
+          }}>
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </div>
         </div>
       </div>
 
       {/* Headline */}
-      <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', lineHeight: '1.5', marginBottom: expanded ? '14px' : '0' }}>
+      <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--navy-primary)', lineHeight: '1.5', marginBottom: expanded ? '14px' : '0' }}>
         {event.headline}
-      </p>
+      </h3>
 
-      {/* Expanded AI analysis */}
+      {/* Expanded Details */}
       {expanded && (
-        <div style={{ borderTop: '1px solid var(--border-muted)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }} onClick={e => e.stopPropagation()}>
+        <div className="slide-down" style={{ borderTop: '1px solid var(--border-default)', paddingTop: '14px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }} onClick={e => e.stopPropagation()}>
           {(ai.whatHappened) && (
             <div>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '5px' }}>What Happened</div>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '4px' }}>Transaction Context</div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>{ai.whatHappened}</p>
             </div>
           )}
           {(ai.whatItMeans || ai.newsImpact) && (
             <div>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '5px' }}>What It Means</div>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '4px' }}>Compliance Impact Assessment</div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>{ai.whatItMeans || ai.newsImpact}</p>
             </div>
           )}
           {(ai.retailMistake || event.retailTrapText) && (
-            <div style={{ background: 'var(--bear-dim)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '12px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--bear)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <AlertTriangle size={10} /> Retail Trap Warning
+            <div style={{ background: 'var(--bear-dim)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '8px', padding: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--bear)', textTransform: 'uppercase', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertTriangle size={12} /> Compliance Risk Advisory
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>{ai.retailMistake || event.retailTrapText}</p>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>{ai.retailMistake || event.retailTrapText}</p>
             </div>
           )}
         </div>
@@ -155,11 +170,11 @@ export default function IntelligenceFeed({ onStatsLoad }: Props) {
   useEffect(() => { loadEvents() }, [loadEvents])
 
   const FEED_TABS = [
-    { key: 'ALL',         label: 'All'         },
-    { key: 'HIGH_IMPACT', label: 'High Impact' },
-    { key: 'RETAIL_TRAP', label: 'Retail Trap' },
-    { key: 'BULLISH',     label: 'Bullish'     },
-    { key: 'BEARISH',     label: 'Bearish'     },
+    { key: 'ALL',         label: 'All Activity' },
+    { key: 'HIGH_IMPACT', label: 'High Priority' },
+    { key: 'RETAIL_TRAP', label: 'Exceptions' },
+    { key: 'BULLISH',     label: 'Verified Compliant' },
+    { key: 'BEARISH',     label: 'High Risk' },
   ] as const
 
   const filtered = useMemo(() => {
@@ -174,27 +189,27 @@ export default function IntelligenceFeed({ onStatsLoad }: Props) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: '80px', borderRadius: '12px' }} />)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {[1, 2, 3, 4].map(i => <div key={i} className="skeleton" style={{ height: '88px', borderRadius: '10px' }} />)}
       </div>
     )
   }
 
   return (
     <div>
-      {/* Filter bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '4px', color: 'var(--text-muted)' }}>
-          <Filter size={12} />
-          <span style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em' }}>FILTER</span>
+      {/* Filter Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px', color: 'var(--text-muted)' }}>
+          <Filter size={14} />
+          <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Filter:</span>
         </div>
         {FEED_TABS.map(({ key, label }) => (
           <button key={key} onClick={() => setFilter(key)} style={{
-            padding: '5px 12px', borderRadius: '6px', cursor: 'pointer',
-            border: `1px solid ${filter === key ? 'rgba(59,130,246,0.4)' : 'var(--border-muted)'}`,
-            background: filter === key ? 'rgba(59,130,246,0.1)' : 'var(--bg-surface)',
-            color: filter === key ? 'var(--accent-blue)' : 'var(--text-muted)',
-            fontSize: '11px', fontWeight: '600', transition: 'all 0.15s ease',
+            padding: '6px 12px', borderRadius: '6px', cursor: 'pointer',
+            border: `1px solid ${filter === key ? 'var(--accent-blue)' : 'var(--border-default)'}`,
+            background: filter === key ? 'var(--accent-blue-dim)' : 'var(--bg-surface)',
+            color: filter === key ? 'var(--accent-blue)' : 'var(--text-secondary)',
+            fontSize: '12px', fontWeight: '600', transition: 'all 0.15s ease',
           }}>
             {label}
           </button>
@@ -202,20 +217,20 @@ export default function IntelligenceFeed({ onStatsLoad }: Props) {
         <button
           onClick={() => loadEvents(true)}
           disabled={refreshing}
-          style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', background: 'transparent', border: '1px solid var(--border-muted)', borderRadius: '6px', color: 'var(--text-muted)', fontSize: '11px', cursor: 'pointer' }}
+          className="btn-ghost"
+          style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: '12px' }}
         >
-          <RefreshCw size={11} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-          {refreshing ? 'Loading...' : 'Refresh'}
+          <RefreshCw size={12} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+          {refreshing ? 'Updating…' : 'Refresh'}
         </button>
       </div>
 
-      {/* Events */}
+      {/* Events List */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px', border: '1px dashed var(--border-muted)', borderRadius: '12px' }}>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>No events in feed.</p>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
-            Add a POLYGON_API_KEY to your .env.local and run the news ingestion cron to populate the feed.
-          </p>
+        <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--bg-surface)', border: '1px dashed var(--border-default)', borderRadius: '10px' }}>
+          <ShieldCheck size={28} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--navy-primary)', marginBottom: '4px' }}>No compliance activity matches filter</h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Adjust filter selection or refresh the audit log.</p>
         </div>
       ) : (
         filtered.map(event => <FeedCard key={event.id} event={event} />)

@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Search, BookOpen, Radio, Brain, ClipboardList, MoreHorizontal } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Brain, ClipboardList, Settings } from 'lucide-react'
 
 const TABS = [
-  { href: '/feed',     label: 'Feed',     icon: LayoutDashboard },
-  { href: '/mind',     label: 'Mind',     icon: Brain           },
-  { href: '/trades',   label: 'Trades',   icon: ClipboardList   },
-  { href: '/journal',  label: 'Journal',  icon: BookOpen        },
-  { href: '/settings', label: 'More',     icon: MoreHorizontal  },
+  { href: '/feed',     label: 'Command',   icon: LayoutDashboard },
+  { href: '/mind',     label: 'Risk',      icon: Brain           },
+  { href: '/trades',   label: 'Trades',    icon: ClipboardList   },
+  { href: '/journal',  label: 'Audit',     icon: BookOpen        },
+  { href: '/settings', label: 'Settings',  icon: Settings        },
 ]
 
 export default function BottomNav() {
@@ -25,13 +25,20 @@ export default function BottomNav() {
             href={href}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
-              flex: 1, padding: '8px 4px',
+              flex: 1, padding: '6px 4px',
               color: active ? 'var(--accent-blue)' : 'var(--text-muted)',
               textDecoration: 'none',
+              transition: 'all 0.15s ease',
             }}
           >
-            <Icon size={20} />
-            <span style={{ fontSize: '9px', fontWeight: active ? '700' : '500', letterSpacing: '0.04em' }}>
+            <div style={{
+              padding: '3px 10px', borderRadius: '6px',
+              background: active ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon size={18} />
+            </div>
+            <span style={{ fontSize: '10px', fontWeight: active ? '700' : '500' }}>
               {label}
             </span>
           </Link>

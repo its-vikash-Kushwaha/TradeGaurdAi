@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, Clock, RefreshCw, Search, Settings, LogOut, ChevronDown } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Bell, Clock, Search, ChevronDown, ShieldCheck, CheckCircle2, Building, Command } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
 import { searchPopularSymbols } from '@/lib/data/symbols'
 
 interface TickerPrice {
@@ -21,22 +21,49 @@ const WATCH_TICKERS = [
   { symbol: 'SPY',      label: 'SPY', yahooSymbol: 'SPY'      },
   { symbol: 'QQQ',      label: 'QQQ', yahooSymbol: 'QQQ'      },
   { symbol: 'BTC-USD',  label: 'BTC', yahooSymbol: 'BTC-USD'  },
-  { symbol: 'USDINR=X', label: '₹',   yahooSymbol: 'USDINR=X' },
+  { symbol: 'USDINR=X', label: '₹/USD', yahooSymbol: 'USDINR=X' },
 ]
 
+// Map routes to breadcrumbs
+const BREADCRUMB_MAP: Record<string, string> = {
+  '/feed':      'Overview / Compliance Command Center',
+  '/trades':    'Trade Operations / Transactions & Audit Log',
+  '/watchlist': 'Trade Operations / Counterparty Watchlist',
+  '/mind':      'Compliance & Risk / Risk & Regime Engine',
+  '/copilot':   'Intelligence / AI Compliance Copilot',
+  '/research':  'Intelligence / Regulatory & Market Terminal',
+  '/journal':   'Intelligence / Audit & Review Journal',
+  '/settings':  'System / Enterprise Settings',
+}
+
 export default function TopBar() {
-  const router                          = useRouter()
-  const [prices,    setPrices]          = useState<Record<string, TickerPrice>>({})
-  const [time,      setTime]            = useState(new Date())
-  const [searchVal, setSearchVal]       = useState('')
-  const [searchOpen, setSearchOpen]     = useState(false)
-  const [searchFocus, setSearchFocus]   = useState(0)
-  const [profileOpen, setProfileOpen]   = useState(false)
-  const [user,       setUser]           = useState<UserProfile | null>(null)
-  const searchRef                       = useRef<HTMLDivElement>(null)
-  const profileRef                      = useRef<HTMLDivElement>(null)
+  const router                        = useRouter()
+  const pathname                      = usePathname()
+  const [prices,    setPrices]        = useState<Record<string, TickerPrice>>({})
+  const [time,      setTime]          = useState(new Date())
+  const [searchVal, setSearchVal]     = useState('')
+  const [searchOpen, setSearchOpen]   = useState(false)
+  const [searchFocus, setSearchFocus] = useState(0)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [user,       setUser]         = useState<UserProfile | null>(null)
+  const searchRef                     = useRef<HTMLDivElement>(null)
+  const profileRef                    = useRef<HTMLDivElement>(null)
+  const inputRef                      = useRef<HTMLInputElement>(null)
 
   const searchSuggestions = searchVal.length >= 1 ? searchPopularSymbols(searchVal, 6) : searchPopularSymbols('', 6)
+
+  // Keyboard shortcut to focus search
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        inputRef.current?.focus()
+        setSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [])
 
   async function fetchPrices() {
     await Promise.allSettled(
@@ -51,7 +78,7 @@ export default function TopBar() {
             }))
           }
         } catch {
-          // keep previous value on error
+          // keep previous on failure
         }
       })
     )
@@ -75,7 +102,6 @@ export default function TopBar() {
       .catch(() => {})
   }, [])
 
-  // Close dropdowns on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (searchRef.current  && !searchRef.current.contains(e.target  as Node)) setSearchOpen(false)
@@ -92,63 +118,63 @@ export default function TopBar() {
     setSearchOpen(false)
   }
 
-  const timeStr = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
-  const dateStr = time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const timeStr = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  const breadcrumb = BREADCRUMB_MAP[pathname] ?? 'TradeGuard Platform'
 
   const initials = user?.name
     ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-    : 'T'
+    : 'TC'
 
   return (
     <header style={{
-      height: '52px',
+      height: '56px',
       background: 'var(--bg-surface)',
-      borderBottom: '1px solid var(--border-muted)',
+      borderBottom: '1px solid var(--border-default)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 24px', flexShrink: 0, gap: '16px',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
     }}>
-      {/* Live market tickers */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
-        {WATCH_TICKERS.map((t, i) => {
-          const p = prices[t.symbol]
-          const up = (p?.changePct ?? 0) >= 0
-          return (
-            <div key={t.symbol} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {i > 0 && <div style={{ width: '1px', height: '16px', background: 'var(--border-muted)' }} />}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-muted)', fontWeight: '600' }}>
-                  {t.label}
-                </span>
-                {p?.loading ? (
-                  <RefreshCw size={10} color="var(--text-muted)" style={{ animation: 'spin 1s linear infinite' }} />
-                ) : (
-                  <span style={{
-                    fontSize: '11px', fontFamily: 'JetBrains Mono, monospace',
-                    color: up ? 'var(--bull)' : 'var(--bear)', fontWeight: '700',
-                  }}>
-                    {up ? '+' : ''}{p?.changePct?.toFixed(2) ?? '—'}%
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })}
+      {/* Left: Breadcrumbs & System Status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <ShieldCheck size={16} color="var(--accent-blue)" />
+          <span style={{
+            fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)',
+            fontFamily: 'Inter, sans-serif',
+          }}>
+            {breadcrumb}
+          </span>
+        </div>
+
+        <div style={{ width: '1px', height: '18px', background: 'var(--border-default)' }} />
+
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '5px',
+          padding: '3px 8px', borderRadius: '6px',
+          background: 'var(--bull-dim)', border: '1px solid rgba(22,163,74,0.2)',
+        }}>
+          <CheckCircle2 size={11} color="var(--bull)" />
+          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--bull)' }}>
+            All Systems Operational
+          </span>
+        </div>
       </div>
 
-      {/* Quick search — center */}
-      <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+      {/* Center: Search */}
+      <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: '340px' }}>
         <div style={{ position: 'relative' }}>
-          <Search size={13} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
+            ref={inputRef}
             style={{
-              width: '100%', padding: '6px 10px 6px 30px',
-              background: 'var(--bg-subtle)', border: '1px solid var(--border-muted)',
+              width: '100%', padding: '7px 60px 7px 34px',
+              background: 'var(--bg-subtle)', border: '1px solid var(--border-default)',
               borderRadius: '8px', color: 'var(--text-primary)',
               fontSize: '12px', fontFamily: 'JetBrains Mono, monospace',
               outline: 'none', textTransform: 'uppercase',
-              transition: 'border-color 0.15s',
+              transition: 'border-color 0.15s, box-shadow 0.15s',
             }}
-            placeholder="Quick search…"
+            placeholder="Search transaction / ticker…"
             value={searchVal}
             onChange={e => { setSearchVal(e.target.value); setSearchFocus(0) }}
             onFocus={() => setSearchOpen(true)}
@@ -161,13 +187,26 @@ export default function TopBar() {
             autoComplete="off"
             spellCheck={false}
           />
+          <div style={{
+            position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+            pointerEvents: 'none',
+          }}>
+            <span style={{
+              fontSize: '10px', padding: '2px 5px', borderRadius: '4px',
+              background: 'var(--bg-surface)', color: 'var(--text-muted)',
+              border: '1px solid var(--border-default)',
+              fontFamily: 'JetBrains Mono, monospace', fontWeight: '600',
+            }}>
+              Ctrl K
+            </span>
+          </div>
         </div>
         {searchOpen && searchSuggestions.length > 0 && (
-          <div style={{
+          <div className="slide-down" style={{
             position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 300,
-            marginTop: '4px', borderRadius: '10px', overflow: 'hidden',
+            marginTop: '4px', borderRadius: '8px', overflow: 'hidden',
             background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
           }}>
             {searchSuggestions.map((s, i) => (
               <div
@@ -175,136 +214,108 @@ export default function TopBar() {
                 onMouseDown={() => navigateSearch(s.symbol)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 12px', cursor: 'pointer',
+                  padding: '9px 12px', cursor: 'pointer',
                   background: i === searchFocus ? 'var(--bg-subtle)' : 'transparent',
-                  borderBottom: i < searchSuggestions.length - 1 ? '1px solid var(--border-muted)' : 'none',
+                  borderBottom: i < searchSuggestions.length - 1 ? '1px solid var(--border-default)' : 'none',
                 }}
                 onMouseEnter={() => setSearchFocus(i)}
               >
-                <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: '700', fontSize: '12px', color: 'var(--text-primary)' }}>{s.symbol}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '8px' }}>{s.name}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{s.name}</span>
                 </div>
-                <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '3px', background: 'var(--bg-subtle)', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>{s.market}</span>
+                <span style={{
+                  fontSize: '10px', padding: '2px 6px', borderRadius: '4px',
+                  background: 'var(--bg-subtle)', color: 'var(--text-muted)',
+                  fontFamily: 'JetBrains Mono, monospace', fontWeight: '600',
+                }}>{s.market}</span>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Right: clock + bell + profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '11px' }}>
-          <Clock size={11} />
-          <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{timeStr} · {dateStr}</span>
+      {/* Right: Clock & User Profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '5px',
+          color: 'var(--text-muted)', fontSize: '12px',
+        }}>
+          <Clock size={12} />
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: '600' }}>{timeStr} UTC</span>
         </div>
 
         <button style={{
-          width: '30px', height: '30px', background: 'var(--bg-subtle)',
-          border: '1px solid var(--border-default)', borderRadius: '8px',
+          width: '32px', height: '32px', background: 'var(--bg-surface)',
+          border: '1px solid var(--border-default)', borderRadius: '6px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', color: 'var(--text-secondary)',
+          transition: 'all 0.15s ease',
         }}>
-          <Bell size={13} />
+          <Bell size={14} />
         </button>
 
-        {/* Profile dropdown */}
+        {/* Profile */}
         <div ref={profileRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setProfileOpen(!profileOpen)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '7px',
-              padding: '4px 8px 4px 4px', borderRadius: '10px',
-              border: '1px solid var(--border-default)', background: 'var(--bg-subtle)',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '3px 8px 3px 3px', borderRadius: '8px',
+              border: '1px solid var(--border-default)', background: 'var(--bg-surface)',
               cursor: 'pointer', transition: 'all 0.15s ease',
             }}
           >
             <div style={{
               width: '26px', height: '26px',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '10px', fontWeight: '800', color: 'white', flexShrink: 0,
+              background: 'var(--navy-primary)',
+              borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '11px', fontWeight: '800', color: '#FFFFFF', flexShrink: 0,
             }}>
               {initials}
             </div>
-            {user && (
-              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user.name}
-              </span>
-            )}
-            <ChevronDown size={11} color="var(--text-muted)" />
+            <span style={{
+              fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)',
+              maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {user?.name ? user.name.split(' ')[0] : 'Compliance'}
+            </span>
+            <ChevronDown size={12} color="var(--text-muted)" />
           </button>
 
           {profileOpen && (
-            <div style={{
+            <div className="slide-down" style={{
               position: 'absolute', top: '100%', right: 0, zIndex: 300,
-              marginTop: '6px', borderRadius: '12px', overflow: 'hidden',
+              marginTop: '6px', borderRadius: '10px', overflow: 'hidden',
               background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
-              boxShadow: '0 12px 32px rgba(0,0,0,0.5)', minWidth: '220px',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.12)', minWidth: '220px',
             }}>
-              {/* User info */}
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-muted)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{
-                    width: '36px', height: '36px',
-                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '13px', fontWeight: '800', color: 'white', flexShrink: 0,
-                  }}>
-                    {initials}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                      {user?.name ?? 'Demo User'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
-                      {user?.email ?? '—'}
-                    </div>
-                  </div>
+              <div style={{ padding: '14px', borderBottom: '1px solid var(--border-default)' }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  {user?.name ?? 'Compliance Officer'}
                 </div>
-                <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px',
-                    background: user?.plan === 'PRO' ? 'rgba(59,130,246,0.15)' : 'var(--bg-subtle)',
-                    color: user?.plan === 'PRO' ? 'var(--accent-blue)' : 'var(--text-muted)',
-                    border: `1px solid ${user?.plan === 'PRO' ? 'rgba(59,130,246,0.3)' : 'var(--border-muted)'}`,
-                    fontFamily: 'JetBrains Mono, monospace',
-                  }}>
-                    {user?.plan ?? 'FREE'} PLAN
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  {user?.email ?? 'officer@tradeguard.app'}
+                </div>
+                <div style={{ marginTop: '8px' }}>
+                  <span className="badge badge-compliant" style={{ fontSize: '10px' }}>
+                    ENTERPRISE VERIFIED
                   </span>
-                  {!user && (
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                      Demo Mode
-                    </span>
-                  )}
                 </div>
               </div>
-
-              {/* Actions */}
-              {[
-                { icon: Settings, label: 'Settings',    href: '/settings' },
-              ].map(({ icon: Icon, label, href }) => (
-                <button
-                  key={label}
-                  onClick={() => { router.push(href); setProfileOpen(false) }}
-                  style={{
-                    width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
-                    padding: '10px 16px', background: 'transparent', border: 'none',
-                    color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer',
-                    transition: 'all 0.15s', textAlign: 'left',
-                  }}
-                  onMouseOver={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-subtle)'}
-                  onMouseOut={e => (e.currentTarget as HTMLButtonElement).style.background = 'transparent'}
-                >
-                  <Icon size={13} color="var(--text-muted)" />
-                  {label}
-                </button>
-              ))}
-              <div style={{ borderTop: '1px solid var(--border-muted)', padding: '8px 16px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center' }}>
-                  TradeGuard AI · Demo Mode Active
-                </div>
-              </div>
+              <button
+                onClick={() => { router.push('/settings'); setProfileOpen(false) }}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 14px', background: 'transparent', border: 'none',
+                  color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+                onMouseOver={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-subtle)'}
+                onMouseOut={e => (e.currentTarget as HTMLButtonElement).style.background = 'transparent'}
+              >
+                Settings & Compliance Rules
+              </button>
             </div>
           )}
         </div>
