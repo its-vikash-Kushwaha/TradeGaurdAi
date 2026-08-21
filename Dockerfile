@@ -25,6 +25,9 @@ ENV NODE_ENV=production
 # Dummy DATABASE_URL for Next.js build-time static page generation
 ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/db"
 
+# Override Clerk key to empty so ClerkProvider is skipped during build
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""
+
 RUN npx prisma generate
 RUN npm run build
 

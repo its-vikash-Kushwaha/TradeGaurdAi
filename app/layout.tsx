@@ -25,7 +25,10 @@ export default function RootLayout({
     </html>
   )
 
-  if (!publishableKey) {
+  // Consider key valid only if it has actual content beyond the prefix
+  const isValidKey = publishableKey && publishableKey.length > 20
+
+  if (!isValidKey) {
      return content
   }
 
