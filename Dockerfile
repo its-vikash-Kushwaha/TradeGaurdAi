@@ -11,7 +11,7 @@ RUN apk add --no-cache libc6-compat openssl
 FROM base AS deps
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # 3. Builder
 FROM base AS builder

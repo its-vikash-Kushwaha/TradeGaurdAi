@@ -1,7 +1,36 @@
-version: '3.8'
-
 services:
-  # Next.js Application
+  # 1. PostgreSQL Database Container (Self-hosted)
+  db:
+    image: postgres:16-alpine
+    container_name: tradeguard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: tradeguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tradeguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Python Market Regime Detection Service
+  regime-service:
+    build:
+      context: ./regime-service
+      dockerfile: Dockerfile
+    container_name: tradeguard-regime
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+
+  # 3. Next.js Fullstack Web Application
   web:
     build:
       context: .
@@ -13,18 +42,14 @@ services:
     env_file:
       - .env.production
     environment:
+      - DATABASE_URL=postgresql://postgres:password123@db:5432/tradeguard?sslmode=disable
+      - DIRECT_URL=postgresql://postgres:password123@db:5432/tradeguard?sslmode=disable
       - REGIME_SERVICE_URL=http://regime-service:8000
     depends_on:
-      - regime-service
+      db:
+        condition: service_healthy
+      regime-service:
+        condition: service_started
 
-  # Python Market Regime Detection Service
-  regime-service:
-    build:
-      context: ./regime-service
-      dockerfile: Dockerfile
-    container_name: tradeguard-regime
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      - PORT=8000
+volumes:
+  postgres_data:
