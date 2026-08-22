@@ -102,17 +102,22 @@ function PerspectiveCard({ p }: { p: Perspective }) {
             {meta.label}
           </span>
         </div>
-        {p.signal && (
-          <span style={{
-            fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px',
-            color: signalColor(p.signal),
-            background: signalColor(p.signal) + '12',
-            border: `1px solid ${signalColor(p.signal)}25`,
-            fontFamily: 'JetBrains Mono, monospace',
-          }}>
-            {p.signal.replace(/_/g, ' ')}
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {p.model === 'synthetic-demo' && (
+            <span className="badge badge-review" style={{ fontSize: '9px' }}>SYNTHETIC</span>
+          )}
+          {p.signal && (
+            <span style={{
+              fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px',
+              color: signalColor(p.signal),
+              background: signalColor(p.signal) + '12',
+              border: `1px solid ${signalColor(p.signal)}25`,
+              fontFamily: 'JetBrains Mono, monospace',
+            }}>
+              {p.signal.replace(/_/g, ' ')}
+            </span>
+          )}
+        </div>
       </div>
 
       {p.urgentAlert && (
@@ -421,6 +426,9 @@ export default function CopilotPanel({ position, onPositionUpdate }: Props) {
                     <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--navy-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       AI Compliance Consensus Verdict
                     </span>
+                    {session.consensusSummary?.startsWith('Synthetic consensus') && (
+                      <span className="badge badge-review" style={{ fontSize: '9px' }}>SYNTHETIC</span>
+                    )}
                   </div>
                   <span style={{
                     fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '4px',

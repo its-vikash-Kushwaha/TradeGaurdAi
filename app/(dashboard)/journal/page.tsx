@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { BookOpen, Brain, Calendar, Tag, AlertTriangle, RefreshCw, Flame, PenLine, Shield, CheckCircle2, FileText } from 'lucide-react'
 import AITransparencyBadge from '@/components/ui/AITransparencyBadge'
+import BehavioralPanel from '@/components/journal/BehavioralPanel'
 
 interface AIResponse {
   whatYourThinkingShows?: string
@@ -219,6 +220,7 @@ export default function JournalPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: '20px', alignItems: 'start' }}>
         {/* Left Form */}
         <div>
+          <BehavioralPanel />
           <div className="card-enterprise" style={{ padding: '20px', marginBottom: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--navy-primary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px' }}>
               New Activity Log Entry

@@ -13,6 +13,38 @@ import { getActiveModelName, getOpenAIProviderName } from '../ai/router'
 // including fallbacks — so stored labels are always truthful.
 type AgentOutput = { text: string; model: string }
 
+// Deterministic, clearly-labeled synthetic fallback used ONLY when an agent's
+// AI call is rejected (no provider configured / call failed) — never used
+// when a call succeeds. Grounded in the real trade context (symbol, P&L) so
+// it reads as a placeholder for this specific trade, not generic boilerplate.
+// "NOT_ASSESSED" is deliberately used for every directional/signal field so
+// no fabricated bullish/bearish/risk call is ever implied. BEHAVIORAL always
+// uses psychState "NOT_ASSESSED" (never "TILT") so synthetic data can never
+// trigger the real TiltInterventionModal emergency popup.
+function syntheticAgentJson(type: string, ctx: CopilotContext): string {
+  const note = `Synthetic fallback — no AI provider was available for this agent this refresh. ${ctx.symbol} is currently ${ctx.pnlPct >= 0 ? 'up' : 'down'} ${Math.abs(ctx.pnlPct).toFixed(2)}% ($${ctx.pnlDollar.toFixed(2)}) since entry.`
+  switch (type) {
+    case 'TECHNICAL':
+      return JSON.stringify({ summary: note, overallBias: 'NOT_ASSESSED', immediateAlert: null })
+    case 'INSTITUTIONAL':
+      return JSON.stringify({ keyInsight: note, institutionalBias: 'NOT_ASSESSED', riskToPosition: 'NOT_ASSESSED' })
+    case 'DARK_POOL':
+      return JSON.stringify({ keyInsight: note, signal: 'NOT_ASSESSED', significanceLevel: 'NOT_ASSESSED' })
+    case 'SOCIAL':
+      return JSON.stringify({ summary: note, xSentiment: 'NOT_ASSESSED', urgentAlert: null, pumpOrPanicDetected: false })
+    case 'FUNDAMENTAL':
+      return JSON.stringify({ keyInsight: note, fundamentalBias: 'NOT_ASSESSED', catalystRisk: 'NOT_ASSESSED' })
+    case 'BEHAVIORAL':
+      return JSON.stringify({
+        warningMessage: note, psychState: 'NOT_ASSESSED', stateScore: 0,
+        likelyNextMistake: 'NONE', recommendedAction: 'HOLD_PLAN',
+        breathingRoom: '', shouldStopTradingToday: false, stopReason: null,
+      })
+    default:
+      return JSON.stringify({ summary: note })
+  }
+}
+
 // =============================================================================
 // Public entry point — called by start and refresh routes
 // =============================================================================
@@ -131,10 +163,13 @@ export async function runCopilotAnalysis(sessionId: string, trade: Trade) {
     { type: 'BEHAVIORAL',    result: behavResult  },
   ]
 
-  // 5. Parse each agent response — model label comes from the agent itself
+  // 5. Parse each agent response — model label comes from the agent itself.
+  // A rejected call gets a clearly-labeled synthetic fallback instead of the
+  // generic "analysis unavailable" text, with model honestly set to
+  // "synthetic-demo" rather than the provider name that never actually ran.
   const parsed = agentResults.map(({ type, result }) => {
-    const raw   = result.status === 'fulfilled' ? result.value.text  : ''
-    const model = result.status === 'fulfilled' ? result.value.model : getOpenAIProviderName()
+    const raw   = result.status === 'fulfilled' ? result.value.text : syntheticAgentJson(type, ctx)
+    const model = result.status === 'fulfilled' ? result.value.model : 'synthetic-demo'
     const data = parseSafe(raw)
     return {
       type,
@@ -166,8 +201,17 @@ export async function runCopilotAnalysis(sessionId: string, trade: Trade) {
     )
   )
 
-  // 7. Consensus synthesis — runs after all 6 to produce the unified verdict
-  const consensusRaw = await runConsensus(ctx, parsed).catch(() => '{}')
+  // 7. Consensus synthesis — runs after all 6 to produce the unified verdict.
+  // On failure, fall back to an honestly-labeled synthetic consensus instead
+  // of an empty object (which would silently hide the whole verdict card).
+  const consensusRaw = await runConsensus(ctx, parsed).catch(() =>
+    JSON.stringify({
+      overallSignal: 'HOLD_POSITION',
+      consensusSummary: `Synthetic consensus — no AI provider was available to synthesize the 6 agent perspectives this refresh. Each perspective above is a placeholder, not a real assessment. Current P&L: ${ctx.pnlPct >= 0 ? '+' : ''}${ctx.pnlPct.toFixed(2)}%.`,
+      stopLossNote: null,
+      nextDecisionLevel: null,
+    })
+  )
   const consensus = parseSafe(consensusRaw)
 
   // 8. Update session with consensus fields

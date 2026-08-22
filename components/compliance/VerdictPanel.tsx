@@ -5,6 +5,8 @@ import {
   CheckCircle2, XCircle, ShieldAlert, Bot, ArrowRight,
   FileSearch, ListChecks, Gauge, AlertTriangle,
 } from 'lucide-react'
+import { assessRisk } from '@/lib/ai/riskEngine'
+import RiskEngine from '@/components/RiskEngine'
 
 export interface ComplianceCheck {
   name: string
@@ -165,6 +167,9 @@ export default function VerdictPanel({ verdict, onDecisionLogged }: Props) {
           model: {verdict.model}
         </div>
       </div>
+
+      {/* ── Risk Engine (weighted score over the same 4 checks above) ── */}
+      <RiskEngine assessment={assessRisk(verdict.checks)} />
 
       {/* ── Agent chain visualization ── */}
       <div className="card-enterprise" style={{ padding: '20px' }}>
