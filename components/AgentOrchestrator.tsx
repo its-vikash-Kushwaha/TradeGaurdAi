@@ -127,7 +127,7 @@ export default function AgentOrchestrator({ demoCase }: { demoCase: SyntheticCas
             </div>
             {result.risk.overall_risk !== result.compliance_status.replace('FAIL', 'HIGH').replace('PASS', 'LOW').replace('REVIEW', 'MEDIUM') && (
               <div style={{ marginTop: '10px', fontSize: '11px', color: 'var(--warning)', background: 'var(--warning-dim)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: '6px', padding: '8px 10px' }}>
-                Note: RiskEngine's weighted score and ComplianceAgent's check-count verdict used different methodologies here and landed on different risk tiers over the same evidence — both are shown below rather than silently reconciled.
+                Note: RiskEngine&apos;s weighted score and ComplianceAgent&apos;s check-count verdict used different methodologies here and landed on different risk tiers over the same evidence — both are shown below rather than silently reconciled.
               </div>
             )}
           </div>
