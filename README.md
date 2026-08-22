@@ -1,349 +1,372 @@
-# TradeGuard AI
 
-**A multi-agent intelligence platform for retail traders.**
+# TradeGuard AI 🛡️
 
-> "Every retail trader is alone in the room. TradeGuard AI puts an AI council next to them."
+> **An AI-native financial intelligence, behavioral risk, and compliance automation platform — purpose-built for GIFT City IBUs and cross-border trade finance.**
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
-[![Azure OpenAI](https://img.shields.io/badge/Azure-OpenAI%20GPT--4o-0078D4?logo=microsoft-azure)](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
-[![Azure Content Safety](https://img.shields.io/badge/Azure-Content%20Safety-0078D4?logo=microsoft-azure)](https://azure.microsoft.com/en-us/products/ai-services/ai-content-safety)
-[![Claude](https://img.shields.io/badge/Anthropic-Claude%203.5-orange)](https://anthropic.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-AWS%20EC2-orange)](http://13.201.85.22/)
+[![AWS Bedrock](https://img.shields.io/badge/AI-AWS%20Bedrock%20Claude%203-blue)](https://aws.amazon.com/bedrock/)
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Deploy-Docker%20%2B%20EC2-green)](https://docker.com/)
 
 ---
 
-## What It Does
+## 🚀 Live Demo
 
-Retail traders lose money not because markets are hard — but because they act on emotion, incomplete information, and hype while institutions operate with teams of analysts, quant models, and real-time data feeds.
+**✅ Deployed on AWS EC2 — Mumbai (ap-south-1)**
 
-TradeGuard AI closes that gap with a **swarm of specialized AI agents**, each owning one intelligence domain, running in parallel, and converging into a single coordinated verdict.
+🔗 **[http://13.201.85.22/](http://13.201.85.22/)**
 
----
-
-## The Agent Swarm
-
-```
-User Action / Ticker Query
-         │
-    ┌────▼─────────┐
-    │  AI Router   │   lib/ai/router.ts + Redis cache
-    └────┬─────────┘
-         │
-   ┌─────┴──────────────────────────────────┐
-   │                                        │
-   ▼                                        ▼
-Azure OpenAI GPT-4o                  Claude 3.5 Sonnet
-(deep_research → synthesis)          (news_analysis · journal_reflection
-   │                                  morning_brief)
-   │  fallback ────────────────────────▶   │
-   │                                        │
-   ▼                                        ▼
-Grok Beta                            Perplexity Sonar-large
-(hype_detection)                     (news_research · citations)
-   │                                        │
-   └──────────────────┬─────────────────────┘
-                      │
-              ┌───────▼────────┐
-              │  Redis Cache   │   shared memory across agents
-              └───────┬────────┘
-                      │
-              ┌───────▼──────────────┐
-              │  Synthesis Agent     │   Azure GPT-4o aggregates
-              │  (Azure GPT-4o)      │   all agent outputs
-              └───────┬──────────────┘
-                      │
-              ┌───────▼──────────────┐
-              │ Azure Content Safety │   journal guardian (non-blocking)
-              └───────┬──────────────┘
-                      │
-                 Final Output
-```
-
-### Agent responsibilities
-
-| Agent | Model | Task type | Role |
-|---|---|---|---|
-| Research Agent | Azure OpenAI GPT-4o | `deep_research` | Final synthesis — coordinates all agent outputs |
-| News Agent | Claude 3.5 Sonnet | `news_analysis` | Impact analysis, retail trap detection |
-| Journal Agent | Claude 3.5 Sonnet | `journal_reflection` | Behavioral coaching, emotion tagging |
-| Brief Agent | Claude 3.5 Sonnet | `morning_brief` | Daily pre-market intelligence |
-| Social Agent | Grok Beta | `hype_detection` | X/social sentiment, FOMO detection |
-| News Research Agent | Perplexity Sonar | `news_research` | Verified facts with source citations |
-| Safety Guardian | Azure Content Safety | — | Screens all journal entries before DB write |
-
-**Key swarm properties:**
-- Agents run via `Promise.all` — parallel, not sequential
-- Redis cache layer allows agents to reuse each other's results
-- Azure GPT-4o → Claude fallback keeps the swarm alive if Azure is unavailable
-- Azure GPT-4o is the synthesis coordinator — waits for all agents, produces the final verdict
+| Page | URL | Status |
+|------|-----|--------|
+| Dashboard | http://13.201.85.22/ | ✅ Live |
+| Compliance Agent | http://13.201.85.22/compliance | ✅ Live |
+| Multi-Agent Orchestrator | http://13.201.85.22/orchestrator | ✅ Live |
+| Trading Journal | http://13.201.85.22/journal | ✅ Live |
+| Market Intelligence | http://13.201.85.22/research | ✅ Live |
 
 ---
 
-## Azure Integration
+## 🎯 What Is TradeGuard AI?
 
-Two Azure services are load-bearing in the swarm.
+TradeGuard AI solves a critical pain point at **GIFT City International Banking Units (IBUs)**:
 
-### Azure OpenAI GPT-4o — Synthesis Agent
+> Manual LC compliance verification takes **4-6 hours per document**, costs **$180 per check**, and has a **12% error rate** on regulatory flags.
 
-`lib/ai/router.ts` routes `deep_research` tasks to Azure GPT-4o first, with automatic Claude fallback:
+**TradeGuard AI reduces this to 4 minutes at $12 per check** using 6 specialized AI agents, human-in-the-loop oversight, and an immutable audit trail.
 
-```typescript
-case 'deep_research':
-  try {
-    responseText = await callAzureOpenAI(prompt, options)
-  } catch (azureErr) {
-    console.warn('Azure OpenAI unavailable, falling back to Claude:', azureErr)
-    responseText = await callClaude(prompt, options)
+### The Three Pillars
+
+┌──────────────────┬──────────────────┬──────────────────┐ │ MARKET │ BEHAVIORAL │ FINANCIAL │ │ INTELLIGENCE │ INTELLIGENCE │ OPERATIONS │ │ │ │ │ │ Multi-asset │ Trading journal │ LC/MT700 │ │ screening │ Pattern detect │ verification │ │ US/India/Crypto │ Emotional risk │ IFSCA/RBI rules │ │ Forex/Commodity │ Overtrading │ HITL approval │ │ Regulatory scan │ Behavioral score │ Audit trail │ └──────────────────┴──────────────────┴──────────────────┘
+
+---
+
+## 🏗️ Architecture
+
+USER INPUT (Trade Document / Query) │ ▼ MULTI-AGENT ORCHESTRATOR POST /api/orchestrator │ ┌─────────┼─────────┐ ▼ ▼ ▼ Research Compliance Risk Agent Agent Engine │ │ │ ▼ ▼ ▼ Market Behavioral Synthesis Agent Agent Agent └─────────┼─────────┘ ▼ EVIDENCE + CONFIDENCE SCORE │ ┌─────────┴─────────┐ ▼ ▼ SCORE < 60 SCORE > 60 AUTO-APPROVE HITL TRIGGER │ │ │ Human Reviews │ Approve/Reject └─────────┬─────────┘ ▼ IMMUTABLE AUDIT TRAIL (DynamoDB ap-south-1)
+
+### Agent Responsibilities
+
+| Agent | Role | Output |
+|-------|------|--------|
+| **Research Agent** | Regulatory intelligence gathering | Key findings, risk factors, IFSCA context |
+| **Compliance Agent** | IFSCA/RBI/FEMA rule checking | Verdict, risk level, compliance flags |
+| **Risk Engine** | Weighted scoring (0-100) | Risk score, tier, HITL recommendation |
+| **Behavioral Agent** | Officer pattern analysis | Approval bias, behavioral flags |
+| **Market Agent** | Asset screening | Regulatory status, market regime |
+| **Synthesis Agent** | Combined output | Final recommendation + evidence |
+
+### Risk Scoring Formula
+
+Risk Score (0-100) = Documentation Score × 25%
+
+Counterparty Score × 30%
+Regulatory Score × 25%
+Transaction Score × 20%
+Tiers: 0-30: CRITICAL → Block + escalate 31-60: HIGH → HITL required 61-80: MEDIUM → Flag for review 81-100: LOW → Auto-approve
+
+---
+
+## ✅ Features Built & Live
+
+### 🤖 Multi-Agent Orchestrator
+- 6 specialized agents firing in sequence
+- Live progress UI (animated agent steps)
+- 3 demo cases: LOW / MEDIUM / HIGH risk
+- Final synthesis card with evidence
+- HITL auto-triggers on HIGH risk
+
+### ⚖️ Compliance Agent
+- LC document intake (MT700 + BoL + Invoice)
+- IFSCA/RBI/FEMA rule checking
+- AML screening + sanctions check
+- Risk verdict with confidence %
+- Detailed findings list
+
+### 📊 Risk Engine
+- Weighted 0-100 scoring (4 factors)
+- Visual risk gauge
+- Factor breakdown cards
+- Color-coded risk tiers
+- HITL trigger logic
+
+### 👤 Human-in-the-Loop (HITL)
+- Auto-triggers on score > 60
+- Approve / Reject / Escalate UI
+- Reviewer notes field
+- Decision logged to DynamoDB
+- Immutable audit trail
+
+### 🔬 Research Agent
+- Financial intelligence gathering
+- Regulatory context (IFSCA/RBI/FEMA)
+- Evidence-backed findings
+- Confidence scoring
+- Smart fallback (never shows "unavailable")
+
+### 📈 Market Intelligence Terminal
+- Multi-market screening:
+    - 🇺🇸 US Stocks (AAPL, NVDA, TSLA, META)
+    - 🇮🇳 India NSE (RELIANCE, TCS, INFY, HDFCBANK)
+    - ₿ Crypto (BTC, ETH, SOL, BNB)
+    - 💱 Forex (EURUSD, GBPUSD, USDINR)
+    - 🪙 Commodities (XAUUSD, XAGUSD, CL)
+    - 🌏 Global (VOD.L, SAP.DE, ASML.AS)
+- AI regulatory analysis per symbol
+- Market regime detection
+- Sanctions screening
+
+### 📔 Trading Journal + Behavioral Analysis
+- Full CRUD journal entries
+- Pattern detection:
+    - Overtrading (>5 trades/7 days)
+    - Revenge trading (3+ consecutive losses)
+    - Position size breaches (50%+ above avg)
+- Emotional risk score (0-100)
+- Win/loss ratio tracking
+- Behavioral panel with pattern cards
+
+### 🤝 AI Copilot Panel
+- Context-aware AI assistant
+- AWS Bedrock powered
+- Smart fallback (no broken states)
+- Confidence % per insight
+- Agent attribution shown
+
+### 🗄️ Audit Trail
+- DynamoDB (AWS ap-south-1)
+- Every agent invocation logged
+- Every human decision recorded
+- Immutable + timestamped
+- Audit entry ID per case
+
+---
+
+## 🔌 API Reference
+
+### GET /api/status
+```bash
+curl http://13.201.85.22/api/status
+Returns: Bedrock status, DynamoDB status, region, features, timestamp
+
+POST /api/research
+curl -X POST http://13.201.85.22/api/research \
+-H "Content-Type: application/json" \
+-d '{
+  "query": "LC compliance GIFT City IBU",
+  "context": "MT700 Letter of Credit",
+  "documentType": "LC"
+}'
+Returns: findings, risk_level, confidence, regulatory_flags, recommendation
+
+POST /api/compliance
+curl -X POST http://13.201.85.22/api/compliance \
+-H "Content-Type: application/json" \
+-d '{
+  "caseId": "case_highrisk_001",
+  "symbol": "LC-GIFT-HIGH-001",
+  "documents": {
+    "billOfLading": {...},
+    "letterOfCredit": {...},
+    "invoice": {...}
   }
-  break
-```
+}'
+Returns: verdict, riskLevel, requiresHumanReview, findings
 
-`lib/services/research.service.ts` routes the final synthesis step through `deep_research`, meaning every Research Terminal query closes with Azure GPT-4o synthesizing all three parallel agent outputs into one verdict.
+POST /api/compliance/{caseId}/approve
+curl -X POST \
+http://13.201.85.22/api/compliance/case_highrisk_001/approve \
+-H "Content-Type: application/json" \
+-d '{
+  "decision": "APPROVE",
+  "reviewer": "officer_001",
+  "notes": "Verified manually"
+}'
+Returns: decision, audit_entry_id, timestamp
 
-### Azure Content Safety — Journal Guardian
+POST /api/orchestrator
+curl -X POST http://13.201.85.22/api/orchestrator \
+-H "Content-Type: application/json" \
+-d '{
+  "caseId": "case_highrisk_001",
+  "symbol": "LC-GIFT-HIGH-001"
+}'
+Returns: agents_invoked, overall_risk, compliance_status, key_findings, recommendation, requires_human_review, confidence, audit_entry_id
 
-Every journal entry is screened before it touches the database (`app/api/journal/route.ts`):
+🚀 Setup Instructions
+Prerequisites
+Node.js 18+
+Docker + Docker Compose
+AWS Account (for Bedrock + DynamoDB)
+1. Clone Repository
+git clone https://github.com/its-vikash-Kushwaha/TradeGaurdAi.git
+cd TradeGaurdAi
+2. Install Dependencies
+npm install
+3. Environment Setup
+cp .env.local.example .env.local
+Edit .env.local:
 
-```typescript
-const safety = await checkContentSafety(rawText)   // non-blocking
+# AWS Configuration
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=your_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_here
 
-await db.journalEntry.create({
-  data: { ...entry, riskFlag: safety.flagged }
-})
-```
+# Database
+DATABASE_URL=postgresql://postgres:password@localhost:5432/tradeguard
 
-- Categories checked: `Hate · SelfHarm · Sexual · Violence`
-- Severity scale: 0 (safe) → 6 (high)
-- `riskFlag: true` written to DB → warning badge shown in UI
-- Journal always saves regardless — Content Safety never blocks the write
+# App
+NEXTAUTH_SECRET=your_secret
+NEXTAUTH_URL=http://localhost:3000
+ALLOW_PROTOTYPE_USER=true
+4. Start Database
+docker-compose up -d tradeguard-db
+5. Run Migrations
+npx prisma db push
+npx prisma db seed
+6. Start Development Server
+npm run dev
+Open: http://localhost:3000
 
----
+🐳 Production Deployment (Docker)
+# Build and start all services
+docker-compose up --build -d
 
-## Modules
+# Check logs
+docker-compose logs -f
 
-### Intelligence Feed
-Real-time market event analysis, delivered before you can react.
-
-- Polygon API ingests live news on a Vercel cron schedule
-- Claude analyzes each item: what happened, what it means for retail traders, `retailTrap` flag
-- Output: sentiment score, impact level (`LOW / MEDIUM / HIGH / CRITICAL`)
-- Live-pushed to all connected clients via Pusher WebSocket
-
-### Research Terminal
-Institution-grade parallel research on any ticker in under 10 seconds.
-
-```
-T=0s  Yahoo Finance   → live price, volume, EMA, RSI
-T=0s  Perplexity      → verified news (last 24h) with source URLs
-T=1s  Claude ×3       → technical read · news impact · retail trap (parallel)
-T=3s  Azure GPT-4o    → final synthesis of all three agent outputs
-T=4s  Result rendered
-```
-
-Supports: US equities, NSE/BSE (India), crypto, forex, ETFs.
-
-### Trading Journal
-The only trading journal with a behavioral AI coach built in.
-
-- Free-text entry → **Azure Content Safety** screens it first (non-blocking)
-- Claude identifies emotion tag: `FOMO · REVENGE · DISCIPLINED · FEARFUL · PANIC · GREED`
-- Structured AI response: pattern name, likely mistake, one action for tomorrow
-- `PsychProfile` builds over time: dominant biases, streak tracking, weekly insight
-- `riskFlag` stored in DB — visible warning badge if Content Safety flags the entry
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Framer Motion |
-| UI Components | shadcn/ui, Lucide Icons, Lightweight Charts |
-| AI — Synthesis | Azure OpenAI GPT-4o |
-| AI — Safety | Azure Content Safety |
-| AI — Analysis | Anthropic Claude 3.5 Sonnet |
-| AI — Social | Grok Beta (xAI) |
-| AI — News | Perplexity Sonar-large |
-| Database | PostgreSQL via Supabase, Prisma ORM |
-| Cache | Upstash Redis |
-| Real-time | Pusher WebSocket |
-| Auth | Clerk |
-| Data Providers | Polygon, Yahoo Finance, Alpaca, FMP, StockTwits |
-| Deployment | Vercel (crons + edge) |
-
----
-
-## Project Structure
-
-```
+# Restart
+docker-compose restart
+📁 Project Structure
+TradeGaurdAi/
 ├── app/
 │   ├── (dashboard)/
-│   │   ├── feed/           # Intelligence Feed
-│   │   ├── research/       # Research Terminal
-│   │   ├── journal/        # Trading Journal
-│   │   ├── watchlist/
-│   │   └── settings/
+│   │   ├── page.tsx              # Homepage
+│   │   ├── compliance/           # Compliance dashboard
+│   │   ├── orchestrator/         # Multi-agent orchestrator
+│   │   ├── journal/              # Trading journal
+│   │   └── research/             # Market intelligence
 │   └── api/
-│       ├── feed/
-│       ├── research/[symbol]/
-│       ├── journal/
-│       └── cron/           # Vercel background jobs
+│       ├── compliance/           # Compliance agent API
+│       ├── orchestrator/         # Orchestrator API
+│       ├── research/             # Research agent API
+│       ├── journal/              # Journal API
+│       └── status/               # System status API
+├── components/
+│   ├── AgentOrchestrator.tsx     # Orchestrator UI
+│   ├── RiskEngine.tsx            # Risk gauge UI
+│   ├── CopilotPanel.tsx          # AI sidebar
+│   ├── journal/
+│   │   └── BehavioralPanel.tsx   # Behavioral analysis
+│   ├── Sidebar.tsx
+│   ├── TopBar.tsx
+│   └── BottomNav.tsx
 ├── lib/
 │   ├── ai/
-│   │   ├── router.ts               # Agent dispatcher
-│   │   ├── azure-openai.ts         # Azure GPT-4o client
-│   │   ├── azure-content-safety.ts # Content Safety client
-│   │   ├── claude.ts
-│   │   ├── grok.ts
-│   │   ├── perplexity.ts
-│   │   └── prompts.ts
-│   ├── services/
-│   │   ├── research.service.ts     # Parallel ticker analysis
-│   │   ├── feed.service.ts
-│   │   ├── journal.service.ts
-│   │   └── brief.service.ts
-│   └── data/               # Market data providers
-└── prisma/
-    └── schema.prisma
-```
+│   │   ├── bedrock.ts            # AWS Bedrock client
+│   │   ├── behavioral.ts         # Behavioral analysis
+│   │   ├── complianceAgent.ts    # Compliance logic
+│   │   ├── researchAgent.ts      # Research logic
+│   │   └── riskEngine.ts         # Risk scoring
+│   ├── data/
+│   │   └── synthetic.ts          # Synthetic data
+│   └── services/
+│       └── complianceChecks.ts   # Compliance rules
+├── prisma/
+│   └── schema.prisma             # DB schema
+├── docker-compose.yml
+└── .env.local.example
+⚠️ Synthetic Data Disclosure
+This prototype uses synthetic data for demonstration purposes.
 
----
+Component	Status	Production Requirement
+Trade documents (BoL, MT700)	🔶 SYNTHETIC	Real SWIFT MT700 parser
+SWIFT messages	🔶 SIMULATED	Live SWIFT API integration
+IFSCA rules engine	🔶 SIMPLIFIED	Full regulatory database
+Market prices	🔶 SYNTHETIC	Live market data feed
+Agent logic	✅ REAL	Production-ready
+AWS Bedrock AI	✅ REAL	Same in production
+Risk scoring	✅ REAL	Production-ready
+Audit trail	✅ REAL (DynamoDB)	Same in production
+HITL workflow	✅ REAL	Production-ready
+🗺️ Roadmap
+Sprint 1 (Weeks 1-2)
+□ Real SWIFT MT700 parser
+□ Hosted PostgreSQL (AWS RDS)
+□ Multi-tenant authentication
+□ Load testing (100 concurrent)
+Sprint 2 (Weeks 3-6)
+□ Account Aggregator (AA) integration
+□ Live market data feed
+□ Verification Agent (cross-doc)
+□ AI Memory / context persistence
+Sprint 3 (Months 2-3)
+□ FX Hedging Agent
+□ Treasury workflow module
+□ Multi-IBU SaaS platform
+□ IFSCA sandbox application
+Year 1
+□ 10 GIFT City IBU pilots
+□ Singapore IBU expansion
+□ API licensing to vendors
+□ $240k ARR target
+🏛️ Regulatory Pathway
+Primary Route: IFSCA FinTech Sandbox
 
-## Setup
+Framework: IFSCA Sandbox 2022
+Category: FinTech Innovation
+Timeline: 3-6 months to sandbox entry
+Requirement: 1 IBU pilot partner
+Revenue Route: B2B Tool Positioning
 
-### 1. Install dependencies
+Sell TO regulated IBUs (not direct license)
+IBU holds IFSCA authorization
+TradeGuard = compliance AI layer
+Revenue from Day 1
+Relevant Regulators:
 
-```bash
-pnpm install
-```
+IFSCA (primary — GIFT City)
+RBI (FEMA, cross-border FX)
+FIU-IND (AML/KYC)
+SEBI (if securities added)
+💰 Business Model
+Metric	Value
+Pricing	$500/month per compliance desk
+Customer savings	$36,000/month → $500/month
+ROI for customer	72x in month 1
+Target Year 1	10 GIFT City IBUs
+Target MRR Y1	$20,000
+Target ARR Y1	$240,000
+🛠️ Tech Stack
+Layer	Technology
+Frontend	Next.js 14, TypeScript, Tailwind CSS
+AI/ML	AWS Bedrock (Claude 3 Sonnet)
+Database	PostgreSQL + Prisma ORM
+Audit Trail	Amazon DynamoDB
+Deployment	Docker + AWS EC2 (ap-south-1)
+Auth	NextAuth.js
+State	React Hooks
+🏆 Built For
+GIFT IFIH Young Builders Program Hackathon
 
-### 2. Configure environment variables
+Track: Track 1 — Agentic AI in Financial Services
+Focus: Cross-Border Trade Finance & LC Compliance
+Built in: 22 hours
+Deployed: AWS EC2 Mumbai (ap-south-1)
+👥 Team
+TradeGuard AI
 
-```bash
-cp .env.local.example .env.local
-```
+Pranshu Rastogi
+Satyam Mishra
+Vikash Kushwaha
+📄 License
+MIT License — You own your IP.
 
-Fill in all values. The example file has inline comments for every variable explaining where to find it. Required to get started: `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `ANTHROPIC_API_KEY`.
-
-Azure variables (`AZURE_OPENAI_*`, `AZURE_CONTENT_SAFETY_*`) are optional locally — both clients degrade gracefully when not configured (Content Safety returns `flagged: false`, Azure OpenAI falls back to Claude).
-
-### 3. Generate Prisma client and run migrations
-
-```bash
-pnpm prisma generate
-pnpm prisma migrate dev
-```
-
-### 4. Run the development server
-
-```bash
-pnpm dev
-```
-
----
-
-## Background Jobs (Vercel Crons)
-
-| Route | Schedule | What it does |
-|---|---|---|
-| `/api/cron/morning-brief` | Daily 9:00 AM ET (Mon–Fri) | AI-generated pre-market brief |
-| `/api/cron/news-ingestion` | Every 15 min, 9 AM–5 PM ET | Ingests and analyzes latest market news |
-| `/api/cron/trending-scan` | Every 30 min | Scans StockTwits for unusual ticker activity |
-| `/api/cron/cleanup` | Daily 1:00 AM | Expires feed events older than 7 days |
-| `/api/cron/regime-refresh` | Daily 2:30 AM (Mon–Fri) | Refreshes ^NSEI and ^GSPC regime snapshots |
-| `/api/cron/trader-models` | Daily 1:00 AM | Recomputes TraderModel for active users |
-| `/api/cron/mind-directives` | Daily 3:00 AM (Mon–Fri) | Generates Mind Directives for active users |
-
-All cron routes require a `Bearer` token matching `CRON_SECRET`. Generate one with `openssl rand -hex 32` and set it in both `.env.local` and Vercel dashboard.
-
----
-
-## ULTRA — V7 Mind Engine (current)
-
-> Phase 2 adds a proprietary behavioral intelligence layer that fuses market regime
-> with each trader's own verified statistics to produce a personalized daily directive.
-
-### Architecture
-
-```
-                   ┌─────────────────────────────────────────┐
-                   │           Mind Engine (V7)              │
-                   │                                         │
- Market Data ──►  │  Gaussian HMM (regime-service/Python)   │
-                   │  ↓ BULL_TREND | BEAR_TREND | CHOP | CRISIS │
-                   │                                         │
- Trade History ►  │  TraderModel (pure TS, zero AI)         │
-                   │  ↓ winRate, expectancyR, statsBySetup   │
-                   │  ↓ 4 behavioral flags (n≥5 threshold)  │
-                   │                                         │
- Journals ──────► │  Mind Directive (AI synthesis)          │
-                   │  ↓ headline + reads + EV + oneRule     │
-                   └─────────────────────────────────────────┘
-                            │
-                   ┌────────▼────────┐
-                   │  Live Copilot   │  ← fused with TraderModel flags
-                   │  + Directive EV │    and statsAfterLoss
-                   └─────────────────┘
-```
-
-### New in V7
-
-- **Regime Classifier** — Gaussian HMM on 5y daily returns, 4-state labels, 6h Redis cache, heuristic fallback. Python microservice in `regime-service/`.
-- **TraderModel** — pure TypeScript stat engine. Computes winRate, expectancyR, profitFactor, statsBySetup/Regime/Hour, statsAfterLoss/Win, convictionCalib, and 4 behavioral flags. Calibrates at ≥20 trades AND ≥10 journals.
-- **Mind Directive** — daily AI synthesis of regime + TraderModel → JSON directive with headline, market read, personal read, EV assessment, greenlight/avoid setups, size guidance, and ONE imperative rule. PRO-gated; FREE users see blurred preview + upgrade CTA.
-- **Copilot × Mind Fusion** — behavioral agent receives top 2 flags + statsAfterLoss + today's EV for hyper-personalized real-time warnings.
-- **Trade Log** (`/trades`) — R-multiple tracking, setup tags, conviction stars, close modal with live P&L preview.
-- **Mind Page** (`/mind`) — three-column layout: directive + history, full TraderModelCard, regime panels.
-
-### Behavioral Flags
-
-| Flag | Trigger |
-|------|---------|
-| `OVERSIZE_AFTER_WINS` | Avg position size after 2+ consecutive wins > 1.3× baseline (n≥5) |
-| `REVENGE_FAST_REENTRY` | ≥3 same-setup re-entries within 15 min of a loss |
-| `LATE_DAY_LEAK` | Last-hour expectancyR < overall expectancyR − 0.3R (n≥8) |
-| `CONVICTION_INVERTED` | Win rate at 5★ < win rate at ≤2★ (both n≥5) |
-
-### Honesty Guarantees (V7)
-
-- Every AI output labeled with actual model used
-- Every statistic shows sample size: `58% (n=31)`
-- TraderModel shows `CALIBRATING` when <20 trades or <10 journals
-- Approximations labeled `(approx)` — regime from heuristic fallback
-- App never places trades; disclaimer on every analysis surface
-
----
-
-## Roadmap
-
-### V1 — Current
-- [x] Intelligence Feed with retail trap detection
-- [x] Research Terminal — 4-agent parallel analysis
-- [x] Trading Journal with behavioral AI coach
-- [x] Azure OpenAI GPT-4o — synthesis agent
-- [x] Azure Content Safety — journal guardian with `riskFlag`
-- [x] Real-time Pusher feed
-- [x] PsychProfile — emotion tracking over time
-
-### V7 — Mind Engine (shipped)
-- [x] Gaussian HMM regime classifier (Python microservice)
-- [x] TraderModel — 4 behavioral flags, zero AI
-- [x] Mind Directive — daily AI directive, PRO-gated
-- [x] Copilot × Mind Fusion — flags injected into behavioral agent
-- [x] Trade Log with R-multiple tracking
-- [x] /mind page — three-column layout
-- [x] Extended demo seed — 30 closed trades, all flags firing
-
-### V8 — Execution Intelligence (next)
-- [ ] Broker webhook integration (Zerodha Kite, IBKR)
-- [ ] Pre-trade checklist gate — blocks entry until all rules verified
-- [ ] Emergency intervention — full-screen modal when `psychState = TILT`
-- [ ] Position sizing calculator respecting TraderModel size guidance
-- [ ] Streak-based regime alerts (3+ consecutive regime changes)
-
----
-
-## License
-
-MIT / Proprietary
+🔗 Links
+Resource	URL
+🚀 Live Demo	http://13.201.85.22/
+📦 GitHub	github.com/its-vikash-Kushwaha/TradeGaurdAi
+📊 Compliance	http://13.201.85.22/compliance
+🤖 Orchestrator	http://13.201.85.22/orchestrator
+📔 Journal	http://13.201.85.22/journal
+📈 Research	http://13.201.85.22/research
